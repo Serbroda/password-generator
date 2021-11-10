@@ -5,20 +5,38 @@ const from = "de";
 const to = "en";
 const url = `https://www.wordreference.com/random/${from}${to}`;
 
+const wordCount = 3;
+const separator = "-";
+const doReplaceLetters = false;
+const doAddRandomInt = true;
+
 (async () => {
   try {
-    const word1 = processHtml(await getRandomWord());
-    const word2 = processHtml(await getRandomWord());
-    const word3 = processHtml(await getRandomWord());
-    const password = `${word1}-${word2}-${word3}-${getRandomIntInclusive(
-      1,
-      9
-    )}`;
-    console.log(password);
+    console.log(await generatePassword());
   } catch (e) {
     console.error(e);
   }
 })();
+
+async function generatePassword() {
+  let password = "";
+
+  for (let i = 1; i <= wordCount; i++) {
+    let word = await getRandomWord();
+    if (doReplaceLetters) {
+      word = replaceLetters(word);
+    }
+    password = password + word;
+    if (i < wordCount) {
+      password = password + separator;
+    }
+  }
+
+  if (doAddRandomInt) {
+    password = password + "-" + getRandomInt(1, 9);
+  }
+  return password;
+}
 
 function replaceLetters(input) {
   let word = input.replace(/[i|I]/i, "1");
@@ -28,14 +46,14 @@ function replaceLetters(input) {
   return word;
 }
 
-function getRandomIntInclusive(min, max) {
+function getRandomInt(min, max) {
   min = Math.ceil(min);
   max = Math.floor(max);
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 async function getRandomWord() {
-  return await request({
+  const html = await request({
     method: "GET",
     uri: url,
     headers: {
@@ -43,4 +61,5 @@ async function getRandomWord() {
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36",
     },
   });
+  return processHtml(html);
 }
