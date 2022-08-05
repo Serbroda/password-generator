@@ -4,13 +4,15 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node src/index.js"
+    "start": "node src/index.js",
+    "package": "pkg src/index.js --out-path build"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "cheerio": "^1.0.0-rc.10",
     "command-line-args": "^5.2.1",
+    "pkg": "^5.8.0",
     "request-promise-native": "^1.0.9"
   }
 }
