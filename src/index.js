@@ -1,39 +1,64 @@
 const request = require("request-promise-native");
 const processHtml = require("./process-html");
+const commandLineArgs = require("command-line-args");
 
-const from = "de";
-const to = "en";
-const url = `https://www.wordreference.com/random/${from}${to}`;
+const optionDefinitions = [
+    { name: "from", alias: "f", type: String },
+    { name: "to", alias: "t", type: String },
+    { name: "number-of-words", alias: "n", type: Number },
+    { name: "separator", alias: "s", type: String },
+    { name: "random-number", alias: "r", type: Boolean },
+    { name: "letter-replace", alias: "l", type: Boolean },
+];
 
-const wordCount = 3;
-const separator = "-";
-const doReplaceLetters = false;
-const doAddRandomInt = true;
+const options = {
+    ...{
+        from: "en",
+        to: "en",
+        "number-of-words": 3,
+        separator: "-",
+        "random-number": false,
+        "letter-replace": false,
+    },
+    ...commandLineArgs(optionDefinitions),
+};
+
+const url = `https://www.wordreference.com/random/${options.from}${options.to}`;
 
 (async () => {
     try {
         console.log(await generatePassword());
     } catch (e) {
-        console.error(e);
+        switch (e.statusCode) {
+            case 404:
+                console.error(`URL ${url} not found`);
+                break;
+            default:
+                console.error(e);
+                break;
+        }
     }
 })();
 
 async function generatePassword() {
     let password = "";
 
-    for (let i = 1; i <= wordCount; i++) {
+    const numberOfWords = options["number-of-words"];
+    const letterReplace = options["letter-replace"];
+
+    for (let i = 1; i <= numberOfWords; i++) {
         let word = await getRandomWord();
-        if (doReplaceLetters) {
+        if (letterReplace) {
             word = replaceLetters(word);
         }
         password = password + word;
-        if (i < wordCount) {
-            password = password + separator;
+        if (i < numberOfWords) {
+            password = password + options.separator;
         }
     }
 
-    if (doAddRandomInt) {
-        password = password + "-" + getRandomInt(1, 9);
+    if (options["random-number"]) {
+        password = password + options.separator + getRandomInt(1, 9);
     }
     return password;
 }
