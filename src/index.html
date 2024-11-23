@@ -74,13 +74,13 @@
             function checkPasswordStrength(pwd) {
                 let strength = 0;
 
-                // Kriterien für Passwortstärke
+                // Strengere Kriterien für Passwortstärke
                 const criteria = {
-                    length: pwd.length >= 8,
-                    uppercase: /[A-Z]/.test(pwd),
-                    lowercase: /[a-z]/.test(pwd),
-                    numbers: /[0-9]/.test(pwd),
-                    specialChars: /[!@#$%^&*(),.?":{}|<>]/.test(pwd),
+                    length: pwd.length >= 12, // Mindestens 12 Zeichen
+                    uppercase: /[A-Z]/.test(pwd), // Mindestens 1 Großbuchstabe
+                    lowercase: /[a-z]/.test(pwd), // Mindestens 1 Kleinbuchstabe
+                    numbers: /[0-9]/.test(pwd), // Mindestens 2 Zahlen
+                    specialChars: /[!@#$%^&*(),.?":{}|<>]/.test(pwd), // Mindestens 1 Sonderzeichen
                 };
 
                 // Stärke erhöhen, wenn ein Kriterium erfüllt ist
@@ -113,18 +113,26 @@
                 };
             }
 
-            function generatePassword() {
+            function transformWord(word) {
                 const charMap = {
                     'I': '1', 'i': '1',
                     'A': '@', 'a': '@',
-                    'S': '$', 's': '$'
+                    'S': '$', 's': '$',
+                    'o': '0', 'O': '0'
                 };
 
-                password.value = sentence.value.split(' ').map(word => {
-                    let transformed = word.slice(0, 2);
-                    transformed = transformed.split('').map(char => charMap[char] || char).join('');
-                    return transformed;
-                }).join('');
+                let transformed = word.slice(0, 2);
+                transformed = transformed.split('').map(char => charMap[char] || char).join('');
+                return transformed;
+            }
+
+            function generatePassword() {
+                const parts = sentence.value.split("+");
+                const mainSentence = parts[0].trim();
+                const suffix = parts[1] ? "+" + transformWord(parts[1].trim()) : "";
+
+                password.value = mainSentence.split(' ').map(word => transformWord(word)).join('');
+                password.value += suffix;
 
                 passwordLength.value = password.value.length;
                 passwordStrength.value = checkPasswordStrength(password.value);
