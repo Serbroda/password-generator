@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"
+    >
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <title>Password Generator</title>
+    <style>
+        #app {
+            padding: 20px;
+        }
+        .strength-bar {
+            height: 10px;
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            margin-top: -12px;
+            overflow: hidden;
+            position: relative;
+        }
+        .strength-bar-fill {
+            height: 100%;
+            transition: width 0.3s ease, background-color 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+
+<div id="app" class="container">
+
+    <h1>Generate remarkable Password from Sentence</h1>
+
+    <fieldset role="group">
+        <input
+            v-model="sentence"
+            type="text"
+            name="sentence"
+            placeholder="Sentence"
+        />
+        <button @click="generatePassword">Generate</button>
+    </fieldset>
+
+    <input
+        v-model="password"
+        name="password"
+        placeholder="Password"
+        aria-label="password"
+        readonly
+    />
+
+    <div class="strength-bar">
+        <div
+            class="strength-bar-fill"
+            :style="{ width: passwordStrength.score * 20 + '%', backgroundColor: getStrengthColor() }"
+        ></div>
+    </div>
+
+    <small>Length: {{ passwordLength }}, Strength: {{ passwordStrength.label }}</small>
+</div>
+
+<script>
+    const { createApp, ref } = Vue;
+
+    createApp({
+        setup() {
+            const sentence = ref("");
+            const password = ref("");
+            const passwordLength = ref(0);
+            const passwordStrength = ref({ score: 0, label: "Very Weak" });
+
+            function checkPasswordStrength(pwd) {
+                let strength = 0;
+
+                // Kriterien für Passwortstärke
+                const criteria = {
+                    length: pwd.length >= 8,
+                    uppercase: /[A-Z]/.test(pwd),
+                    lowercase: /[a-z]/.test(pwd),
+                    numbers: /[0-9]/.test(pwd),
+                    specialChars: /[!@#$%^&*(),.?":{}|<>]/.test(pwd),
+                };
+
+                // Stärke erhöhen, wenn ein Kriterium erfüllt ist
+                for (let key in criteria) {
+                    if (criteria[key]) strength++;
+                }
+
+                // Bewertung basierend auf erfüllten Kriterien
+                let strengthLabel = '';
+                switch (strength) {
+                    case 5:
+                        strengthLabel = 'Very Strong';
+                        break;
+                    case 4:
+                        strengthLabel = 'Strong';
+                        break;
+                    case 3:
+                        strengthLabel = 'Medium';
+                        break;
+                    case 2:
+                        strengthLabel = 'Weak';
+                        break;
+                    default:
+                        strengthLabel = 'Very Weak';
+                }
+
+                return {
+                    score: strength,
+                    label: strengthLabel
+                };
+            }
+
+            function generatePassword() {
+                const charMap = {
+                    'I': '1', 'i': '1',
+                    'A': '@', 'a': '@',
+                    'S': '$', 's': '$'
+                };
+
+                password.value = sentence.value.split(' ').map(word => {
+                    let transformed = word.slice(0, 2);
+                    transformed = transformed.split('').map(char => charMap[char] || char).join('');
+                    return transformed;
+                }).join('');
+
+                passwordLength.value = password.value.length;
+                passwordStrength.value = checkPasswordStrength(password.value);
+            }
+
+            function getStrengthColor() {
+                switch (passwordStrength.value.score) {
+                    case 5: return "green";
+                    case 4: return "lightgreen";
+                    case 3: return "orange";
+                    case 2: return "red";
+                    default: return "darkred";
+                }
+            }
+
+            return {
+                sentence,
+                password,
+                passwordLength,
+                passwordStrength,
+                generatePassword,
+                getStrengthColor
+            };
+        },
+    }).mount("#app");
+</script>
+
+</body>
+</html>
